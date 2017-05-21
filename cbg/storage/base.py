@@ -498,8 +498,8 @@ class BerkeleyDBStorage(BaseStorage):
         if isinstance(key, str):
             key = str.encode(key)
         elif isinstance(key, int):
-            key = str.encode(str(key))
-            # key = (key).to_bytes(4, byteorder='big')
+            # key = str.encode(str(key))
+            key = (key).to_bytes(4, byteorder='big')
         if isinstance(val, str):
             val = str.encode(val)
         elif isinstance(val, int):
@@ -512,8 +512,8 @@ class BerkeleyDBStorage(BaseStorage):
         if isinstance(key, str):
             key = str.encode(key)
         elif isinstance(key, int):
-            key = str.encode(str(key))
-            # key = (key).to_bytes(4, byteorder='big')
+            # key = str.encode(str(key))
+            key = (key).to_bytes(4, byteorder='big')
         v = self.storage[key]
         if self.decode:
             return v.decode(self.decode)
