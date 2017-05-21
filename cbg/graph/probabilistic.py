@@ -194,7 +194,7 @@ class ProbabilisticMultiColourDeBruijnGraph(BaseGraph):
         out = {}
         colours_to_sample_dict = self.colours_to_sample_dict()
         for colour in self._get_kmer_colours(kmer, canonical=True):
-            sample = colours_to_sample_dict.get(colour, 'missing')
+            sample = colours_to_sample_dict.get(str(colour), 'missing')
             if sample != "DELETED":
                 out[sample] = 1.0
         return out
@@ -223,7 +223,7 @@ class ProbabilisticMultiColourDeBruijnGraph(BaseGraph):
         for i, f in enumerate(cumsum):
             res = f/lkmers
             if res >= threshold:
-                sample = colours_to_sample_dict.get(i, i)
+                sample = colours_to_sample_dict.get(str(i), i)
                 if sample != "DELETED":
                     out[sample] = res
         return out
