@@ -90,6 +90,10 @@ def extract_kmers_from_ctx(ctx, k):
         for kmer in seq_to_kmers(i.kmer.canonical_value, k):
             yield kmer
 
+# Load species meta
+with open("data/accession_to_species.json", "r") as inf:
+    ACCESSION_TO_SPECIES = json.load(inf)
+
 
 @hug.object(name='bigsi', version='0.1.1', api=API)
 @hug.object.urls('/', requires=())
@@ -185,7 +189,8 @@ class bigsi(object):
                             graph=bigsi,
                             output_format=output_format,
                             pipe=pipe_out,
-                            score=score)
+                            score=score,
+                            ACCESSION_TO_SPECIES=ACCESSION_TO_SPECIES)
 
         if not pipe_out:
             return result

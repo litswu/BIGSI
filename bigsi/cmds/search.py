@@ -30,7 +30,7 @@ def parse_input(infile):
     # return gene_to_kmers
 
 
-def _search(gene_name, seq, results, threshold, graph, output_format="json", pipe=False, score=False):
+def _search(gene_name, seq, results, threshold, graph, output_format="json", pipe=False, score=False, ACCESSION_TO_SPECIES={}):
     if pipe:
         if output_format == "tsv":
             start = time.time()
@@ -73,12 +73,25 @@ def _search(gene_name, seq, results, threshold, graph, output_format="json", pip
         start = time.time()
         results[gene_name]['results'] = graph.search(
             seq, threshold=threshold, score=score)
+    # append species metadata
+        for k, r in results.items():
+            for i, j in r["results"].items():
+                species = ACCESSION_TO_SPECIES.get(i, [])
+                if not species:
+                    species_string = "UNKNOWN"
+                else:
+                    species_string = ""
+                    for s in species:
+                        tmp = "%s : %s%%; " % (
+                            list(s.keys())[0], str(round(list(s.values())[0], 2)))
+                        species_string += tmp
+                results[k]["results"][i]["species"] = species_string
         diff = time.time() - start
         results[gene_name]['time'] = diff
     return results
 
 
-def search(seq, fasta_file, threshold, graph, output_format="json", pipe=False, score=False):
+def search(seq, fasta_file, threshold, graph, output_format="json", pipe=False, score=False, ACCESSION_TO_SPECIES={}):
     if output_format == "tsv":
         print("\t".join(
             ["gene_name", "sample_id", str("kmer_coverage_percent"), str("time")]))
@@ -91,5 +104,5 @@ def search(seq, fasta_file, threshold, graph, output_format="json", pipe=False, 
     else:
         results = _search(
             gene_name=seq, seq=seq, results=results, threshold=threshold,
-            graph=graph, output_format=output_format, pipe=pipe, score=score)
+            graph=graph, output_format=output_format, pipe=pipe, score=score, ACCESSION_TO_SPECIES=ACCESSION_TO_SPECIES)
     return results
