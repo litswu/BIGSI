@@ -66,6 +66,8 @@ DEFUALT_DB_DIRECTORY = "./db-bigsi/"
 import math
 from multiprocessing import Pool
 
+bone = (1).to_bytes(1, byteorder='big')
+
 
 def unpack_and_sum(bas):
     c = 0
