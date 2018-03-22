@@ -59,6 +59,7 @@ from bigsi.utils.cortex import GraphReader
 from bigsi.utils import seq_to_kmers
 import cProfile
 from bigsi.version import __version__
+import humanfriendly
 
 
 def do_cprofile(func):
@@ -107,17 +108,14 @@ class bigsi(object):
 
     @hug.object.cli
     @hug.object.post('/insert', output_format=hug.output_format.json)
-    def insert(self, bloom_filter):
+    def insert(self, db: hug.types.text, bloomfilter, sample):
         """Inserts a bloom filter into the graph
 
-        e.g. bigsi insert ERR1010211.bloom
+        e.g. bigsi insert ERR1010211.bloom ERR1010211
 
         """
-        graph = get_graph()
-        result = insert(bloom_filter, async=CELERY)
-        graph.sync()
-        return {"result": result, 'took':
-                float(hug_timer)}
+        graph = BIGSI(db)
+        return insert(graph=BIGSI(db), bloomfilter=bloomfilter, sample=sample)
 
     @hug.object.cli
     @hug.object.post('/bloom')
@@ -139,12 +137,27 @@ class bigsi(object):
     @hug.object.post('/build', output_format=hug.output_format.json)
     def build(self, db: hug.types.text,
               bloomfilters: hug.types.multiple,
-              samples: hug.types.multiple = []):
+              samples: hug.types.multiple = [],
+              max_memory: hug.types.text=''):
         if samples:
             assert len(samples) == len(bloomfilters)
         else:
             samples = bloomfilters
-        return build(graph=BIGSI(db), bloomfilter_filepaths=bloomfilters, samples=samples)
+        if max_memory:
+            max_memory_bytes = humanfriendly.parse_size(max_memory)
+        else:
+            max_memory_bytes = None
+        return build(index=BIGSI(db),
+                     bloomfilter_filepaths=bloomfilters,
+                     samples=samples,
+                     max_memory=max_memory_bytes)
+
+    @hug.object.cli
+    @hug.object.post('/merge', output_format=hug.output_format.json)
+    def merge(self, db1: hug.types.text,
+              db2: hug.types.text):
+        BIGSI(db1).merge(BIGSI(db2))
+        return {"result": "merged %s into %s." % (db2, db1)}
 
     @hug.object.cli
     @hug.object.get('/search', examples="seq=ACACAAACCATGGCCGGACGCAGCTTTCTGA",
@@ -159,10 +172,11 @@ class bigsi(object):
                pipe_out: hug.types.smart_boolean=False,
                pipe_in: hug.types.smart_boolean=False,
                cachesize: hug.types.number=4,
-               score: hug.types.smart_boolean=False):
+               score: hug.types.smart_boolean=False,
+               nproc: hug.types.number=4):
         if db is None:
             db = BDB_DB_FILENAME
-        bigsi = BIGSI(db, cachesize=cachesize)
+        bigsi = BIGSI(db, cachesize=cachesize, nproc=nproc)
         """Returns samples that contain the searched sequence.
         Use -f to search for sequence from fasta"""
         if output_format in ["tsv", "fasta"]:
@@ -230,6 +244,7 @@ class bigsi(object):
 
 def main():
     API.cli()
+
 
 if __name__ == "__main__":
     main()

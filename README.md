@@ -9,23 +9,11 @@ This tool was formally named "Coloured Bloom Graph" or "CBG" in reference to the
 Documentation can be found at https://bigsi.readme.io/. 
 An index of the microbial ENA/SRA (Dec 2016) can be queried at http://www.bigsi.io. 
 
-# Installing without docker
+You can read more in our preprint here: https://www.biorxiv.org/content/early/2017/12/15/234955.
 
-bigsi has a docker image that bundles mccortex, berkeley DB and BIGSI in one image. Skip to `Quickstart with docker` for an easier install.. 
+# Install
 
-#### Install requirement berkeley-db
-
-	brew install berkeley-db4
-	pip install cython
-	BERKELEYDB_DIR=/usr/local/opt/berkeley-db4/ pip install bsddb3
-
-For berkeley-db install on unix, see [Dockerfile](Dockerfile). 
-
-#### Install BIGSI
-
-	git clone https://github.com/Phelimb/BIGSI.git
-	pip install -r requirements.txt
-	python setup.py install
+bigsi has a docker image that bundles mccortex, berkeley DB and BIGSI in one image. See: https://bigsi.readme.io/docs for install instructions. 
 
 ## Quickstart
 
@@ -33,22 +21,27 @@ For berkeley-db install on unix, see [Dockerfile](Dockerfile).
 
 Requires [mccortex](github.com/mcveanlab/mccortex). 
 
-	mccortex/bin/mccortex31 build -k 31 -s test1 -1 /data/kmers.txt /data/test1.ctx
-	mccortex/bin/mccortex31 build -k 31 -s test2 -1 /data/kmers.txt /data/test2.ctx
+	mccortex/bin/mccortex31 build -k 31 -s test1 -1 example-data/kmers.txt example-data/test1.ctx
+	mccortex/bin/mccortex31 build -k 31 -s test2 -1 example-data/kmers.txt example-data/test2.ctx
 
 #### Construct the bloom filters
 
-	bigsi init test-data/db --k 31 --m 1000 --h 1
+	bigsi init test-bigsi --k 31 --m 1000 --h 1
 
-	bigsi bloom --db test-data/db -c test-data/test1.ctx test-data/test1.bloom
-	bigsi bloom --db test-data/db -c test-data/test1.ctx test-data/test2.bloom
+	bigsi bloom --db test-bigsi -c example-data/test1.ctx example-data/test1.bloom
+	bigsi bloom --db test-bigsi -c example-data/test2.ctx example-data/test2.bloom
 	
 ### Build the combined graph
 
-	bigsi build test-data/db test-data/test1.bloom test-data/test2.bloom
+	bigsi build test-bigsi example-data/test1.bloom example-data/test2.bloom -s s1 -s s2
 
 ### Query the graph
-	bigsi search --db test-data/db -s CGGCGAGGAAGCGTTAAATCTCTTTCTGACG
+	bigsi search -o tsv --db test-bigsi -s CGGCGAGGAAGCGTTAAATCTCTTTCTGACG
+
+## Insert a new sample into the graph 
+
+	bigsi insert test-bigsi example-data/test3.bloom s3
+
 
 	
 
@@ -63,22 +56,30 @@ BIGSI using single colour graphs to construct the coloured graph.
 Use [mccortex](https://github.com/mcveanlab/mccortex) to build. 
 	
 	PWD=`pwd`
-	docker run -v $PWD/test-data:/data phelimb/bigsi mccortex/bin/mccortex31 build -k 31 -s test1 -1 /data/kmers.txt /data/test1.ctx
-	docker run -v $PWD/test-data:/data phelimb/bigsi mccortex/bin/mccortex31 build -k 31 -s test2 -1 /data/kmers.txt /data/test2.ctx
+	docker run -v $PWD/example-data:/data phelimb/bigsi mccortex/bin/mccortex31 build -k 31 -s test1 -1 /data/kmers.txt /data/test1.ctx
+	docker run -v $PWD/example-data:/data phelimb/bigsi mccortex/bin/mccortex31 build -k 31 -s test2 -1 /data/kmers.txt /data/test2.ctx
 
 ### Building a BIGSI
 
 #### Construct the bloom filters
 
-	docker run -v $PWD/test-data:/data phelimb/bigsi bigsi  init /data/test.bigsi --k 31 --m 1000 --h 1
+	docker run -v $PWD/example-data:/data phelimb/bigsi bigsi  init /data/test.bigsi --k 31 --m 1000 --h 1
 
-	docker run -v $PWD/test-data:/data phelimb/bigsi bigsi bloom --db /data/test.bigsi -c /data/test1.ctx /data/test1.bloom	
-	docker run -v $PWD/test-data:/data phelimb/bigsi bigsi bloom --db /data/test.bigsi -c /data/test1.ctx /data/test2.bloom	
+	docker run -v $PWD/example-data:/data phelimb/bigsi bigsi bloom --db /data/test.bigsi -c /data/test1.ctx /data/test1.bloom	
+	docker run -v $PWD/example-data:/data phelimb/bigsi bigsi bloom --db /data/test.bigsi -c /data/test1.ctx /data/test2.bloom	
 #### Build the combined graph
-	docker run -v $PWD/test-data:/data phelimb/bigsi bigsi build /data/test.bigsi /data/test1.bloom /data/test2.bloom
+	docker run -v $PWD/example-data:/data phelimb/bigsi bigsi build /data/test.bigsi /data/test1.bloom /data/test2.bloom
 
 #### Query the graph
-	docker run -v $PWD/test-data:/data phelimb/bigsi bigsi search --db /data/test.bigsi -s CGGCGAGGAAGCGTTAAATCTCTTTCTGACG
+	docker run -v $PWD/example-data:/data phelimb/bigsi bigsi search --db /data/test.bigsi -s CGGCGAGGAAGCGTTAAATCTCTTTCTGACG
 	
 
+## Citation
 
+Please cite
+
+```Real-time search of all bacterial and viral genomic data
+Phelim Bradley, Henk den Bakker, Eduardo Rocha, Gil McVean, Zamin Iqbal
+bioRxiv 234955; doi: https://doi.org/10.1101/234955 
+```
+if you use BIGSI in your work.
