@@ -67,7 +67,7 @@ def test_add_sample_metadata(Graph, sample):
 # @given(Graph=ST_GRAPH, sample=ST_SAMPLE_NAME)
 # @example(Graph=BIGSI, sample='0')
 # @settings(max_examples=5)
-def test_insert_and_unique_sample_names(Graph, sample):
+def test_insert_and_unique_sample_names():
     Graph, sample = BIGSI, '0'
     seq, k, h = 'AATTTTTATTTTTTTTTTTTTAATTAATATT', 11, 1
     m = 10
@@ -99,6 +99,7 @@ def test_cant_write_to_read_only_index():
     bigsi.build([bloom], [sample])
     os.chmod(bigsi.graph_filename, S_IREAD | S_IRGRP | S_IROTH)
     # Can write to a read only DB
+    bigsi = Graph(mode="r")
     with pytest.raises(bsddb3.db.DBAccessError):
         bigsi.insert(bloom, "1234")
     assert sample in bigsi.search(seq)
