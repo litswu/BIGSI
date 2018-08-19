@@ -23,7 +23,7 @@ def test_create_variant_probe_set(Graph, kmer_size):
     variant_search = BIGSIVariantSearch(bigsi, "bigsi/tests/data/ref.fasta")
     assert variant_search is not None
 
-    assert len(variant_search.create_variant_probe_set(
+    assert len(variant_search._create_variant_probe_set(
         "T1C").refs[0]) == (2*kmer_size+1)
 
 
@@ -33,7 +33,7 @@ def test_search_for_variant(Graph):
     bigsi = Graph.create(m=1000, k=kmer_size, force=True)
     variant_search = BIGSIVariantSearch(bigsi, "bigsi/tests/data/ref.fasta")
     # Add a the reference seq, the alternate and both as samples
-    variant_probe_set = variant_search.create_variant_probe_set(
+    variant_probe_set = variant_search._create_variant_probe_set(
         "T1C")
     ref = variant_probe_set.refs[0]
     alt = variant_probe_set.alts[0]
@@ -41,7 +41,7 @@ def test_search_for_variant(Graph):
     bloom2 = bigsi.bloom(bigsi.seq_to_kmers(alt))
     bigsi.build([bloom1, bloom2], ['ref', 'alt'])
 
-    results = variant_search.search_for_variant("T", 1, "C")
+    results = variant_search.search("T", 1, "C")
     print(results)
     assert results.get("T1C").get("ref").get("genotype") == "0/0"
     assert results.get("T1C").get("alt").get("genotype") == "1/1"
@@ -60,8 +60,8 @@ def test_search_for_amino_acid_mutation():
         4]
 
     # # Add a the reference seq, the alternate and both as samples
-    variant_probe_set1 = variant_search.create_variant_probe_set(var_name1)
-    variant_probe_set2 = variant_search.create_variant_probe_set(var_name2)
+    variant_probe_set1 = variant_search._create_variant_probe_set(var_name1)
+    variant_probe_set2 = variant_search._create_variant_probe_set(var_name2)
 
     ref1 = variant_probe_set1.refs[0]
     alt1 = variant_probe_set1.alts[0]
@@ -74,7 +74,7 @@ def test_search_for_amino_acid_mutation():
     bigsi.build([bloom1, bloom2, bloom3, bloom4],
                 ['ref1', 'alt1', 'ref2', 'alt2'])
 
-    results = variant_search.search_for_amino_acid_variant(
+    results = variant_search.search(
         "rpoB", "S", 450, "X")
     assert results.get("rpoB_S450X").get("ref1").get("genotype") == "0/0"
     assert results.get("rpoB_S450X").get("ref1").get("aa_mut")[:-1] == "S450"
